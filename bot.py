@@ -1,48 +1,201 @@
-import sys
-import signal
+"""
+Telegram Bot for Sinich
+Hosted on Bothost.org
+"""
+
 import logging
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Красиво обрабатываем Ctrl+C
-def handle_keyboard_interrupt(signum, frame):
-    print("\n" + "=" * 50)
-    print("🛑 БОТ ОСТАНОВЛЕН")
-    print("=" * 50)
-    sys.exit(0)
+# ============================================
+# НАСТРОЙКА ЛОГГИРОВАНИЯ
+# ============================================
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
-signal.signal(signal.SIGINT, handle_keyboard_interrupt)
+# ============================================
+# КОМАНДЫ БОТА
+# ============================================
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /start"""
+    user = update.effective_user
+    welcome_text = f"""
+🎮 Привет, {user.first_name}! Я твой игровой помощник!
 
-# ТОКЕН - ВСТАВЬТЕ СВОЙ!
-TOKEN = "8309462119:AAGHOQz1VdtAi1EYbhv7BEkn7Oc343MmYz0"
+✨ Доступные команды:
+/start - это сообщение
+/hello - поздороваться
+/help - все команды
+/games - игровые функции
+/shopping - список покупок (скоро)
+/remind - напоминание (скоро)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Бот работает! Для остановки нажмите Ctrl+C в консоли.")
+📌 Пиши мне что угодно, и я отвечу!
+    """
+    await update.message.reply_text(welcome_text)
 
-async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет, Полик! 👋")
+async def hello_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /hello"""
+    responses = [
+        "Привет, Полик! Го играть? 🎮",
+        "Здарова, друг! Как делишки? 😎",
+        "Приветствую! Чем займемся сегодня? ✨",
+        "Йоу! Рад тебя видеть! 🎯",
+        "Привет! Готов к новым достижениям? 🏆"
+    ]
+    import random
+    await update.message.reply_text(random.choice(responses))
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /help"""
+    help_text = """
+🤖 **КОМАНДЫ БОТА:**
+
+🎮 **Основные:**
+/start - Начать работу
+/hello - Приветствие
+/help - Эта справка
+/info - Информация о боте
+
+🎯 **Игровые (в разработке):**
+/games - Игровые функции
+/tracker - Трекер игрового прогресса
+/events - Игровые события
+
+🛒 **Бытовые (в разработке):**
+/shopping - Список покупок
+/todo - Список дел
+/remind - Напоминания
+
+💬 **Прочее:**
+Просто напиши сообщение - и я отвечу!
+    """
+    await update.message.reply_text(help_text)
+
+async def info_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /info"""
+    info_text = """
+📊 **ИНФОРМАЦИЯ О БОТЕ:**
+• Хостинг: Bothost.org 🚀
+• Статус: Работает ✅
+• Владелец: Sinich (Полик) 🎮
+• Версия: 1.0
+• Назначение: Помощник для геймера и быта
+
+⚙️ **Технические детали:**
+• Библиотека: python-telegram-bot
+• Язык: Python 3
+• Токен: Безопасно хранится на Bothost
+    """
+    await update.message.reply_text(info_text)
+
+async def games_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /games"""
+    games_text = """
+🎮 **ИГРОВЫЕ ФУНКЦИИ (СКОРО):**
+
+1. **Трекер прогресса:**
+   - Сохранение уровней
+   - Отслеживание квестов
+   - Игровые цели
+
+2. **Организация:**
+   - Планирование игр с друзьями
+   - Напоминания о ивентах
+   - Расписание рейдов
+
+3. **Статистика:**
+   - Время в играх
+   - Достижения
+   - Коллекции
+
+✨ Функции в разработке - следи за обновлениями!
+    """
+    await update.message.reply_text(games_text)
+
+async def echo_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик обычных сообщений"""
+    user_message = update.message.text
+    
+    # Простые ответы на популярные фразы
+    responses = {
+        "привет": "И тебе привет! 😊",
+        "как дела": "Отлично! Готов помогать с играми и делами! 🎮",
+        "что делаешь": "Жду твоих команд! Пиши /help для списка команд",
+        "спасибо": "Всегда рад помочь! 👍",
+        "пока": "До встречи! Не забывай про гильдейский рейд! 👋"
+    }
+    
+    # Проверяем, есть ли готовый ответ
+    lower_message = user_message.lower()
+    for key in responses:
+        if key in lower_message:
+            await update.message.reply_text(responses[key])
+            return
+    
+    # Если нет готового ответа - просто повторяем
+    reply_text = f"Вы написали: \"{user_message}\"\n\n"
+    reply_text += "Пока я только учусь! Используй команды из /help"
+    await update.message.reply_text(reply_text)
+
+# ============================================
+# ИНИЦИАЛИЗАЦИЯ И ЗАПУСК
+# ============================================
 
 def main():
-    print("=" * 50)
-    print("ЗАПУСК БОТА - ДЛЯ ОСТАНОВКИ: Ctrl+C")
-    print("=" * 50)
+    """Основная функция инициализации бота"""
     
-    if TOKEN == "ВАШ_ТОКЕН_ЗДЕСЬ":
-        print("❌ Вставьте свой токен от @BotFather!")
-        return
+    logger.info("=" * 50)
+    logger.info("ЗАПУСК ТЕЛЕГРАМ БОТА ДЛЯ SINICH")
+    logger.info("=" * 50)
     
-    app = Application.builder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("hello", hello))
-    
-    print("✅ Бот запущен и готов к работе!")
-    print("✅ Телеграм -> Найдите бота -> /start или /hello")
-    print("=" * 50)
-    
-    app.run_polling()
+    try:
+        # Bothost автоматически подставляет токен в {{token}}
+        # НЕ заменяйте {{token}} на реальный токен!
+        app = Application.builder().token("{{token}}").build()
+        
+        # Добавляем обработчики команд
+        app.add_handler(CommandHandler("start", start_command))
+        app.add_handler(CommandHandler("hello", hello_command))
+        app.add_handler(CommandHandler("help", help_command))
+        app.add_handler(CommandHandler("info", info_command))
+        app.add_handler(CommandHandler("games", games_command))
+        
+        # Добавляем обработчик для обычных сообщений
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo_message))
+        
+        logger.info("✅ Бот инициализирован успешно!")
+        logger.info("✅ Обработчики команд добавлены")
+        logger.info("=" * 50)
+        
+        return app
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка при инициализации бота: {e}")
+        raise
 
-if __name__ == '__main__':
-    main()
+# ============================================
+# ТОЧКА ВХОДА
+# ============================================
+if __name__ == "__main__":
+    """
+    Этот блок выполняется только при локальном запуске.
+    На Bothost функция main() вызывается автоматически.
+    """
+    print("=" * 50)
+    print("⚠️  Этот код предназначен для Bothost!")
+    print("=" * 50)
+    print("Для локального тестирования:")
+    print("1. Замените '{{token}}' на ваш токен")
+    print("2. Запустите: python bot.py")
+    print("=" * 50)
+    
+    # Для локального тестирования (раскомментируйте при необходимости):
+    # app = Application.builder().token("ВАШ_ТОКЕН_ЗДЕСЬ").build()
+    # app.add_handler(CommandHandler("start", start_command))
+    # app.add_handler(CommandHandler("hello", hello_command))
+    # app.run_polling()
